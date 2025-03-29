@@ -6,6 +6,7 @@ from database import Base
 
 class BucketList(Base):
     __tablename__ = "bucket_list"
+    __table_args__ = {"schema": "bucket_list_app"}
 
     id = Column(Integer, primary_key=True, index=True)
     title = Column(String(255), nullable=False)

@@ -6,6 +6,7 @@ from database import Base
 
 class BucketItem(Base):
     __tablename__ = "bucket_item"
+    __table_args__ = {"schema": "bucket_list_app"}
 
     id = Column(Integer, primary_key=True, index=True)
     bucket_list_id = Column(Integer, ForeignKey("bucket_list.id", ondelete="CASCADE"), nullable=False, index=True)
