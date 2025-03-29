@@ -3,12 +3,22 @@ from sqlalchemy.orm import Session
 import random
 from uuid import uuid4
 
+from fastapi.middleware.cors import CORSMiddleware
+
 from database import get_db
 from models.bucket_list import BucketList
 from routes import account_routes, bucket_list_routes, bucket_item_routes
 
 app = FastAPI()
 
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["http://localhost:5173",
+                   "https://bucket-lister-frontend-production.up.railway.app/"],
+    allow_credentials=True,
+    allow_methods=["*"],  # Allows all methods
+    allow_headers=["*"],  # Allows all headers
+)
 
 @app.get("/")
 async def root():
