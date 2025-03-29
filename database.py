@@ -1,4 +1,4 @@
-from sqlalchemy import create_engine, event
+from sqlalchemy import create_engine, event, text
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker
 import os
@@ -40,7 +40,7 @@ Base = declarative_base()
 def get_db():
     db = SessionLocal()
     try:
-        db.execute(f"SET search_path TO {DB_SCHEMA}")
+        db.execute(text(f"SET search_path TO {DB_SCHEMA}"))
         yield db
     finally:
         db.close()
