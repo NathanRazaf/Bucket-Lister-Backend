@@ -5,6 +5,7 @@ from uuid import uuid4
 
 from database import get_db
 from models.bucket_list import BucketList
+from routes import account_routes
 
 app = FastAPI()
 
@@ -18,6 +19,9 @@ async def root():
 async def say_hello(name: str):
     return {"message": f"Hello {name}"}
 
+
+# Include the account router
+app.include_router(account_routes.router)
 
 @app.post("/bucket-list/test")
 async def create_test_bucket_list(title: str, db: Session = Depends(get_db)):
