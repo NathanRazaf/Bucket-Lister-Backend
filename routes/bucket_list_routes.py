@@ -1,0 +1,277 @@
+from fastapi import APIRouter, Depends, HTTPException, status, Path
+from sqlalchemy.orm import Session
+from typing import Annotated, List, Optional
+import uuid
+from pydantic import BaseModel, Field
+from datetime import datetime
+
+from database import get_db
+from models.bucket_list import BucketList
+from routes.account_routes import oauth2_scheme, SECRET_KEY, ALGORITHM
+import jwt
+
+# Create the router
+router = APIRouter(
+    prefix="/api/bucket-lists",
+    tags=["bucket-lists"],
+    responses={404: {"description": "Not found"}}
+)
+
+
+# Pydantic models for request/response validation
+
+
+class BucketItemResponse(BaseModel):
+    id: int
+    bucket_list_id: int
+    content: str
+    is_completed: bool
+    last_modified_by: int
+    date_last_modified: Optional[datetime] = None
+
+    class Config:
+        from_attributes = True
+
+
+class BucketListCreate(BaseModel):
+    title: str = Field(..., min_length=1, max_length=255)
+    description: Optional[str] = None
+
+
+class BucketListUpdate(BaseModel):
+    title: Optional[str] = Field(None, min_length=1, max_length=255)
+    description: Optional[str] = None
+    is_private: Optional[bool] = None
+
+
+class BucketListResponse(BaseModel):
+    id: int
+    title: str
+    description: Optional[str] = None
+    created_by: int
+    date_created: datetime
+    is_private: bool
+    share_token: Optional[str] = None
+    items: List[BucketItemResponse] = []
+
+    class Config:
+        from_attributes = True
+
+
+# Helper Functions
+def get_current_user_id(token: str) -> int:
+    """Get the user ID from the JWT token."""
+    try:
+        payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
+        user_id = int(payload.get("sub"))
+        if user_id is None:
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="Invalid authentication credentials"
+            )
+        return user_id
+    except jwt.PyJWTError:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Invalid authentication credentials"
+        )
+
+
+def generate_share_token():
+    """Generate a unique token for sharing bucket lists."""
+    return uuid.uuid4().hex
+
+
+# Routes
+@router.post("", response_model=BucketListResponse, status_code=status.HTTP_201_CREATED)
+def create_bucket_list(
+        bucket_list: BucketListCreate,
+        token: Annotated[str, Depends(oauth2_scheme)],
+        db: Session = Depends(get_db)
+):
+    user_id = get_current_user_id(token)
+
+    db_bucket_list = BucketList(
+        title=bucket_list.title,
+        description=bucket_list.description,
+        created_by=user_id,
+    )
+
+    db.add(db_bucket_list)
+    db.commit()
+    db.refresh(db_bucket_list)
+
+    return db_bucket_list
+
+
+@router.get("", response_model=List[BucketListResponse])
+def get_bucket_lists(
+        token: Annotated[str, Depends(oauth2_scheme)],
+        skip: int = 0,
+        limit: int = 100,
+        db: Session = Depends(get_db)
+):
+    user_id = get_current_user_id(token)
+
+    bucket_lists = db.query(BucketList).filter(
+        BucketList.created_by == user_id
+    ).offset(skip).limit(limit).all()
+
+    return bucket_lists
+
+
+@router.get("/{bucket_list_id}", response_model=BucketListResponse)
+def get_bucket_list(
+        token: Annotated[str, Depends(oauth2_scheme)],
+        bucket_list_id: int = Path(...),
+        db: Session = Depends(get_db)
+):
+    user_id = get_current_user_id(token)
+
+    bucket_list = db.query(BucketList).filter(
+        BucketList.id == bucket_list_id,
+        BucketList.created_by == user_id
+    ).first()
+
+    if bucket_list is None:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Bucket list not found"
+        )
+
+    return bucket_list
+
+
+@router.put("/{bucket_list_id}", response_model=BucketListResponse)
+def update_bucket_list(
+        token: Annotated[str, Depends(oauth2_scheme)],
+        bucket_list_update: BucketListUpdate,
+        bucket_list_id: int = Path(...),
+        db: Session = Depends(get_db)
+):
+    user_id = get_current_user_id(token)
+
+    bucket_list = db.query(BucketList).filter(
+        BucketList.id == bucket_list_id,
+        BucketList.created_by == user_id
+    ).first()
+
+    if bucket_list is None:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Bucket list not found"
+        )
+
+    # Update fields if provided
+    if bucket_list_update.title is not None:
+        bucket_list.title = bucket_list_update.title
+    if bucket_list_update.description is not None:
+        bucket_list.description = bucket_list_update.description
+    if bucket_list_update.is_private is not None:
+        bucket_list.is_private = bucket_list_update.is_private
+
+    db.commit()
+    db.refresh(bucket_list)
+
+    return bucket_list
+
+
+@router.delete("/{bucket_list_id}", status_code=status.HTTP_204_NO_CONTENT)
+def delete_bucket_list(
+        token: Annotated[str, Depends(oauth2_scheme)],
+        bucket_list_id: int = Path(...),
+        db: Session = Depends(get_db)
+):
+    user_id = get_current_user_id(token)
+
+    bucket_list = db.query(BucketList).filter(
+        BucketList.id == bucket_list_id,
+        BucketList.created_by == user_id
+    ).first()
+
+    if bucket_list is None:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Bucket list not found"
+        )
+
+    db.delete(bucket_list)
+    db.commit()
+
+    return None
+
+
+@router.post("/{bucket_list_id}/share", response_model=BucketListResponse)
+def share_bucket_list(
+        token: Annotated[str, Depends(oauth2_scheme)],
+        bucket_list_id: int = Path(...),
+        db: Session = Depends(get_db)
+):
+    user_id = get_current_user_id(token)
+
+    bucket_list = db.query(BucketList).filter(
+        BucketList.id == bucket_list_id,
+        BucketList.created_by == user_id
+    ).first()
+
+    if bucket_list is None:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Bucket list not found"
+        )
+
+    # Generate a share token if one doesn't exist
+    if not bucket_list.share_token:
+        bucket_list.share_token = generate_share_token()
+        bucket_list.is_private = False
+        db.commit()
+        db.refresh(bucket_list)
+
+    return bucket_list
+
+
+@router.post("/{bucket_list_id}/unshare", response_model=BucketListResponse)
+def unshare_bucket_list(
+        token: Annotated[str, Depends(oauth2_scheme)],
+        bucket_list_id: int = Path(...),
+        db: Session = Depends(get_db)
+):
+    user_id = get_current_user_id(token)
+
+    bucket_list = db.query(BucketList).filter(
+        BucketList.id == bucket_list_id,
+        BucketList.created_by == user_id
+    ).first()
+
+    if bucket_list is None:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Bucket list not found"
+        )
+
+    # Remove share token and make private
+    bucket_list.share_token = None
+    bucket_list.is_private = True
+    db.commit()
+    db.refresh(bucket_list)
+
+    return bucket_list
+
+
+@router.get("/shared/{share_token}", response_model=BucketListResponse)
+def get_shared_bucket_list(
+        share_token: str = Path(...),
+        db: Session = Depends(get_db)
+):
+    bucket_list = db.query(BucketList).filter(
+        BucketList.share_token == share_token,
+        BucketList.is_private == False
+    ).first()
+
+    if bucket_list is None:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Shared bucket list not found or no longer available"
+        )
+
+    return bucket_list
