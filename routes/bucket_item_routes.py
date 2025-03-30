@@ -106,20 +106,6 @@ def get_bucket_items(
     return items
 
 
-@router.get("/{item_id}", response_model=BucketItemResponse)
-def get_bucket_item(
-        token: Annotated[str, Depends(oauth2_scheme)],
-        item_id: int = Path(...),
-        bucket_list_id: int = Path(...),
-        db: Session = Depends(get_db)
-):
-    user_id = get_current_user_id(token)
-
-    item = return_item(user_id, item_id, bucket_list_id, db)
-
-    return item
-
-
 @router.put("/{item_id}", response_model=BucketItemResponse)
 def update_bucket_item(
         token: Annotated[str, Depends(oauth2_scheme)],
