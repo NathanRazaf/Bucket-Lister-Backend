@@ -5,7 +5,7 @@ from pydantic import BaseModel
 from datetime import datetime
 
 from database import get_db
-from models.bucket_list import BucketList
+from models.bucket_list import BucketList, BucketItem
 from routes.bucket_list_routes import get_current_user_id, BucketItemResponse
 from routes.account_routes import oauth2_scheme
 
