@@ -10,12 +10,7 @@
     <option name="/Default/Housekeeping/FeatureSuggestion/FeatureSuggestionManager/DisabledSuggesters/=SwitchToGoToActionSuggester/@EntryIndexRemoved" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="b060829f-82d1-4cdf-ae82-e0efc30bc2fa" name="Changes" comment="">
-      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/models/account.py" beforeDir="false" afterPath="$PROJECT_DIR$/models/account.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/models/bucket_list.py" beforeDir="false" afterPath="$PROJECT_DIR$/models/bucket_list.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/routes/bucket_list_routes.py" beforeDir="false" afterPath="$PROJECT_DIR$/routes/bucket_list_routes.py" afterDir="false" />
-    </list>
+    <list default="true" id="b060829f-82d1-4cdf-ae82-e0efc30bc2fa" name="Changes" comment="" />
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
@@ -107,7 +102,7 @@
       <workItem from="1743374214692" duration="755000" />
       <workItem from="1743375728703" duration="2349000" />
       <workItem from="1743378382401" duration="136000" />
-      <workItem from="1743393332405" duration="3355000" />
+      <workItem from="1743393332405" duration="3499000" />
     </task>
     <servers />
   </component>
