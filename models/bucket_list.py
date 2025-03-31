@@ -34,3 +34,22 @@ class BucketItem(Base):
 
     # Relationship with BucketList
     bucket_list = relationship("BucketList", back_populates="items")
+
+
+class BucketListCollaborator(Base):
+    __tablename__ = "bucket_list_collaborator"
+    __table_args__ = {"schema": "bucket_list_app"}
+
+    id = Column(Integer, primary_key=True, index=True)
+    bucket_list_id = Column(Integer, ForeignKey("bucket_list_app.bucket_list.id", ondelete="CASCADE"), nullable=False,
+                            index=True)
+    collaborator_id = Column(Integer, ForeignKey("bucket_list_app.account.id", ondelete="CASCADE"), nullable=False,
+                             index=True)
+    access_date = Column(DateTime(timezone=True), default=func.now(), nullable=False)
+    is_owner = Column(Boolean, default=False, nullable=False)
+
+    # Relationship with BucketList
+    bucket_list = relationship("BucketList", back_populates="collaborators")
+
+    # Relationship with Account
+    collaborator = relationship("Account", backref="collaborated_bucket_lists")

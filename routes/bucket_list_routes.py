@@ -1,4 +1,5 @@
 from fastapi import APIRouter, Depends, HTTPException, status, Path
+from sqlalchemy import func
 from sqlalchemy.orm import Session
 from typing import Annotated, List, Optional
 import uuid
@@ -6,7 +7,7 @@ from pydantic import BaseModel, Field
 from datetime import datetime
 
 from database import get_db
-from models.bucket_list import BucketList
+from models.bucket_list import BucketList, BucketListCollaborator
 from routes.account_routes import oauth2_scheme, SECRET_KEY, ALGORITHM
 import jwt
 
@@ -227,7 +228,7 @@ def share_bucket_list(
         db.commit()
         db.refresh(bucket_list)
 
-    return bucket_list
+    return bucket_list.share_token
 
 
 @router.post("/{bucket_list_id}/unshare", response_model=BucketListResponse)
@@ -260,9 +261,14 @@ def unshare_bucket_list(
 
 @router.get("/shared/{share_token}", response_model=BucketListResponse)
 def get_shared_bucket_list(
+        token: Annotated[str, Depends(oauth2_scheme)],
         share_token: str = Path(...),
         db: Session = Depends(get_db)
 ):
+    # Check if the user is authenticated
+    user_id = get_current_user_id(token)
+
+    # First get the shared bucket list
     bucket_list = db.query(BucketList).filter(
         BucketList.share_token == share_token,
         BucketList.is_private == False
@@ -273,5 +279,34 @@ def get_shared_bucket_list(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="Shared bucket list not found or no longer available"
         )
+
+    # Add or update the user as a collaborator
+    try:
+        # Check if the user is already a collaborator
+        collaborator = db.query(BucketListCollaborator).filter(
+            BucketListCollaborator.bucket_list_id == bucket_list.id,
+            BucketListCollaborator.collaborator_id == user_id
+        ).first()
+
+        if collaborator is None:
+            # Add as a new collaborator
+            db_collaborator = BucketListCollaborator(
+                bucket_list_id=bucket_list.id,
+                collaborator_id=user_id,
+                is_owner=False,
+                access_date=func.now()  # Set current timestamp
+            )
+            db.add(db_collaborator)
+        else:
+            # Update access date for existing collaborator
+            collaborator.access_date = func.now()
+
+        db.commit()
+
+    except Exception as e:
+        # Log the error but don't fail the request
+        print(f"Error adding collaborator: {str(e)}")
+        db.rollback()
+        # Continue to return the bucket list even if adding collaborator fails
 
     return bucket_list

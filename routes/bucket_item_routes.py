@@ -5,7 +5,7 @@ from pydantic import BaseModel
 from datetime import datetime
 
 from database import get_db
-from models.bucket_list import BucketList, BucketItem
+from models.bucket_list import BucketList, BucketItem, BucketListCollaborator
 from routes.bucket_list_routes import get_current_user_id, BucketItemResponse
 from routes.account_routes import oauth2_scheme
 
@@ -15,6 +15,7 @@ router = APIRouter(
     tags=["bucket-items"],
     responses={404: {"description": "Not found"}}
 )
+
 
 class BucketItemCreate(BaseModel):
     content: str
@@ -26,25 +27,42 @@ class BucketItemUpdate(BaseModel):
 
 
 # Helper Functions
-def verify_bucket_list_ownership(bucket_list_id: int, user_id: int, db: Session):
-    """Verify that the user owns the bucket list."""
+def verify_bucket_list_access(bucket_list_id: int, user_id: int, db: Session):
+    """Verify that the user either owns or collaborates on the bucket list."""
+    # First check if user is the owner
     bucket_list = db.query(BucketList).filter(
         BucketList.id == bucket_list_id,
         BucketList.created_by == user_id
     ).first()
 
-    if bucket_list is None:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="Bucket list not found or you don't have access"
-        )
+    if bucket_list:
+        return bucket_list
 
-    return bucket_list
+    # If not the owner, check if user is a collaborator
+    collaborator = db.query(BucketListCollaborator).filter(
+        BucketListCollaborator.bucket_list_id == bucket_list_id,
+        BucketListCollaborator.collaborator_id == user_id
+    ).first()
+
+    # If user is a collaborator, get the bucket list
+    if collaborator:
+        bucket_list = db.query(BucketList).filter(
+            BucketList.id == bucket_list_id
+        ).first()
+
+        if bucket_list:
+            return bucket_list
+
+    # If neither owner nor collaborator
+    raise HTTPException(
+        status_code=status.HTTP_404_NOT_FOUND,
+        detail="Bucket list not found or you don't have access"
+    )
 
 
 def return_item(user_id, item_id, bucket_list_id, db):
-    # Verify ownership
-    verify_bucket_list_ownership(bucket_list_id, user_id, db)
+    # Verify access (either owner or collaborator)
+    verify_bucket_list_access(bucket_list_id, user_id, db)
 
     # Get item
     item = db.query(BucketItem).filter(
@@ -60,6 +78,7 @@ def return_item(user_id, item_id, bucket_list_id, db):
 
     return item
 
+
 # Routes
 @router.post("", response_model=BucketItemResponse, status_code=status.HTTP_201_CREATED)
 def create_bucket_item(
@@ -70,8 +89,8 @@ def create_bucket_item(
 ):
     user_id = get_current_user_id(token)
 
-    # Verify ownership
-    verify_bucket_list_ownership(bucket_list_id, user_id, db)
+    # Verify access
+    verify_bucket_list_access(bucket_list_id, user_id, db)
 
     # Create bucket item
     db_bucket_item = BucketItem(
@@ -95,8 +114,8 @@ def get_bucket_items(
 ):
     user_id = get_current_user_id(token)
 
-    # Verify ownership
-    verify_bucket_list_ownership(bucket_list_id, user_id, db)
+    # Verify access
+    verify_bucket_list_access(bucket_list_id, user_id, db)
 
     # Get items
     items = db.query(BucketItem).filter(
@@ -173,5 +192,3 @@ def toggle_bucket_item_completion(
     db.refresh(item)
 
     return item
-
-
