@@ -95,7 +95,7 @@ def verify_bucket_list_access(bucket_list_id: int, user_id: int, db: Session):
     # If not the owner, check if user is a collaborator
     collaborator = db.query(BucketListCollaborator).filter(
         BucketListCollaborator.bucket_list_id == bucket_list_id,
-        BucketListCollaborator.collaborator_id == user_id
+        BucketListCollaborator.account_id == user_id
     ).first()
 
     # If user is a collaborator, get the bucket list
@@ -171,7 +171,7 @@ def get_collaborated_bucket_lists(
         BucketListCollaborator,
         BucketListCollaborator.bucket_list_id == BucketList.id
     ).filter(
-        BucketListCollaborator.collaborator_id == user_id
+        BucketListCollaborator.account_id == user_id
     ).all()
 
     # Apply pagination (simple approach)
@@ -338,14 +338,14 @@ def get_shared_bucket_list(
         # Check if the user is already a collaborator
         collaborator = db.query(BucketListCollaborator).filter(
             BucketListCollaborator.bucket_list_id == bucket_list.id,
-            BucketListCollaborator.collaborator_id == user_id
+            BucketListCollaborator.account_id == user_id
         ).first()
 
         if collaborator is None:
             # Add as a new collaborator
             db_collaborator = BucketListCollaborator(
                 bucket_list_id=bucket_list.id,
-                collaborator_id=user_id,
+                account_id=user_id,
                 is_owner=False,
                 access_date=func.now()  # Set current timestamp
             )
@@ -385,7 +385,7 @@ def get_bucket_list_collaborators(
     result = []
     for collab in collaborators:
         result.append({
-            "collaborator_id": collab.collaborator_id,
+            "account_id": collab.account_id,
             "is_owner": collab.is_owner,
             "access_date": collab.access_date
         })

@@ -19,6 +19,8 @@ class BucketList(Base):
     # Relationship with BucketItem
     items = relationship("BucketItem", back_populates="bucket_list", cascade="all, delete-orphan")
 
+    # Relationship with BucketListCollaborator
+    collaborators = relationship("BucketListCollaborator", back_populates="bucket_list")
 
 # Define BucketItem model second
 class BucketItem(Base):
@@ -43,13 +45,11 @@ class BucketListCollaborator(Base):
     id = Column(Integer, primary_key=True, index=True)
     bucket_list_id = Column(Integer, ForeignKey("bucket_list_app.bucket_list.id", ondelete="CASCADE"), nullable=False,
                             index=True)
-    collaborator_id = Column(Integer, ForeignKey("bucket_list_app.account.id", ondelete="CASCADE"), nullable=False,
+    account_id = Column(Integer, ForeignKey("bucket_list_app.account.id", ondelete="CASCADE"), nullable=False,
                              index=True)
     access_date = Column(DateTime(timezone=True), default=func.now(), nullable=False)
     is_owner = Column(Boolean, default=False, nullable=False)
 
-    # Relationship with BucketList
+    # Change backref to back_populates
     bucket_list = relationship("BucketList", back_populates="collaborators")
-
-    # Relationship with Account
-    collaborator = relationship("Account", backref="collaborated_bucket_lists")
+    collaborator = relationship("Account", back_populates="collaborated_bucket_lists")
