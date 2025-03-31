@@ -41,7 +41,7 @@ def verify_bucket_list_access(bucket_list_id: int, user_id: int, db: Session):
     # If not the owner, check if user is a collaborator
     collaborator = db.query(BucketListCollaborator).filter(
         BucketListCollaborator.bucket_list_id == bucket_list_id,
-        BucketListCollaborator.collaborator_id == user_id
+        BucketListCollaborator.account_id == user_id
     ).first()
 
     # If user is a collaborator, get the bucket list

@@ -12,7 +12,6 @@
   <component name="ChangeListManager">
     <list default="true" id="b060829f-82d1-4cdf-ae82-e0efc30bc2fa" name="Changes" comment="">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/models/bucket_list.py" beforeDir="false" afterPath="$PROJECT_DIR$/models/bucket_list.py" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -107,7 +106,7 @@
       <workItem from="1743378382401" duration="136000" />
       <workItem from="1743393332405" duration="3499000" />
       <workItem from="1743399146731" duration="153000" />
-      <workItem from="1743451479048" duration="899000" />
+      <workItem from="1743451479048" duration="3678000" />
     </task>
     <servers />
   </component>
@@ -115,6 +114,6 @@
     <option name="version" value="3" />
   </component>
   <component name="com.intellij.coverage.CoverageDataManagerImpl">
-    <SUITE FILE_PATH="coverage/Bucket_Lister_Backend$Bucket_Lister_Backend.coverage" NAME="Bucket-Lister-Backend Coverage Results" MODIFIED="1743451479377" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="" />
+    <SUITE FILE_PATH="coverage/Bucket_Lister_Backend$Bucket_Lister_Backend.coverage" NAME="Bucket-Lister-Backend Coverage Results" MODIFIED="1743455731666" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="" />
   </component>
 </project>
