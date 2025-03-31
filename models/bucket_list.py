@@ -42,11 +42,10 @@ class BucketListCollaborator(Base):
     __tablename__ = "bucket_list_collaborator"
     __table_args__ = {"schema": "bucket_list_app"}
 
-    id = Column(Integer, primary_key=True, index=True)
     bucket_list_id = Column(Integer, ForeignKey("bucket_list_app.bucket_list.id", ondelete="CASCADE"), nullable=False,
-                            index=True)
+                            primary_key=True, index=True)
     account_id = Column(Integer, ForeignKey("bucket_list_app.account.id", ondelete="CASCADE"), nullable=False,
-                             index=True)
+                             primary_key=True, index=True)
     access_date = Column(DateTime(timezone=True), default=func.now(), nullable=False)
     is_owner = Column(Boolean, default=False, nullable=False)
 
