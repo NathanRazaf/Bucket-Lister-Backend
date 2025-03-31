@@ -11,8 +11,6 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="b060829f-82d1-4cdf-ae82-e0efc30bc2fa" name="Changes" comment="">
-      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/models/bucket_list.py" beforeDir="false" afterPath="$PROJECT_DIR$/models/bucket_list.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/routes/bucket_list_routes.py" beforeDir="false" afterPath="$PROJECT_DIR$/routes/bucket_list_routes.py" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
